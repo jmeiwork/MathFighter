@@ -17,20 +17,20 @@
     <script src="/signalr/hubs"></script>
     <script>
         $(function () {
-            var chatHub = $.connection.chatHub;
+            var playHub = $.connection.playHub;
 
-            chatHub.client.newJoinAnnouncement = function (message) {
+            playHub.client.newJoinAnnouncement = function (message) {
                 $("#announcements").append("<div>" + message + "</div>");
             }
 
-            chatHub.client.newMessage = function (data) {
+            playHub.client.newMessage = function (data) {
                 $("#messages").append("<div>" + data + "</div>");
             }
 
             $.connection.hub.start().done(function () {
                 $("#btnSend").click(function () {
                     var data = $("#txtMessage").val();
-                    chatHub.server.sendMessageForRoom(
+                    playHub.server.sendMessageForRoom(
                         $("#txtGroup").val(),
                          data
                     );
@@ -38,7 +38,7 @@
 
                 $("#btnJoin").click(function () {
                     var group = $("#txtGroup").val();
-                    chatHub.server.joinRoom(group);
+                    playHub.server.joinRoom(group);
                 });
 
 

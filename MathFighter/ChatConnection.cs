@@ -9,8 +9,8 @@ using Microsoft.AspNet.SignalR.Hubs;
 
 namespace MathFighter
 {
-    [HubName("chatHub")]
-    public class ChatHub : Hub
+    [HubName("playHub")]
+    public class PlayHub : Hub
     {
         public void JoinRoom(string room)
         {
