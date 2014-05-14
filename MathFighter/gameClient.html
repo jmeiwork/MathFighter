@@ -11,6 +11,11 @@
 
     <div><span>type the group you want to join:</span><span><input type="text" id="txtGroup" /></span></div>
     <div><button id="btnJoin">Send</button></div>
+    <button id="btnNextEquation">Next Question</button>
+    <div id="equation"></div>
+    <div><input type="text" id="txtAnswer" /></div>
+    <input type="hidden" id="hidQuestionId" />
+
     <div id="announcements"></div>
     <script src="Scripts/jquery-1.6.4.js"></script>
     <script src="Scripts/jquery.signalR-2.0.3.js"></script>
@@ -27,6 +32,13 @@
                 $("#messages").append("<div>" + data + "</div>");
             }
 
+            //----------------------
+            playHub.client.newQuestion = function (data) {
+                $("#hidQuestionId").val() = data.questionId;
+                $("#equation").text(data.equation);
+            }
+
+
             $.connection.hub.start().done(function () {
                 $("#btnSend").click(function () {
                     var data = $("#txtMessage").val();
@@ -41,6 +53,13 @@
                     playHub.server.joinRoom(group);
                 });
 
+                //---------------
+                $("#btnNextQuestion").click(function () {
+                    var answer = $("#txtAnswer").val();
+                    var questionId = $("#hidQuestionId").val();
+                    playHub.server.submitAnswer(questionId, answer);
+                })
+                
 
             });
 
