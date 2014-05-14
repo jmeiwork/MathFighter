@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+
+    <div><span>type your message:</span><span><input type="text" id="txtMessage" /></span></div>
+    <div><button id="btnSend">Send</button></div>
+    <div id="messages"></div>
+
+    <div><span>type the group you want to join:</span><span><input type="text" id="txtGroup" /></span></div>
+    <div><button id="btnJoin">Send</button></div>
+    <div id="announcements"></div>
+    <script src="Scripts/jquery-1.6.4.js"></script>
+    <script src="Scripts/jquery.signalR-2.0.3.js"></script>
+    <script src="/signalr/hubs"></script>
+    <script>
+        $(function () {
+            var chatHub = $.connection.chatHub;
+
+            chatHub.client.newJoinAnnouncement = function (message) {
+                $("#announcements").append("<div>" + message + "</div>");
+            }
+
+            chatHub.client.newMessage = function (data) {
+                $("#messages").append("<div>" + data + "</div>");
+            }
+
+            $.connection.hub.start().done(function () {
+                $("#btnSend").click(function () {
+                    var data = $("#txtMessage").val();
+                    chatHub.server.sendMessageForRoom(
+                        $("#txtGroup").val(),
+                         data
+                    );
+                });
+
+                $("#btnJoin").click(function () {
+                    var group = $("#txtGroup").val();
+                    chatHub.server.joinRoom(group);
+                });
+
+
+            });
+
+        });
+
+    </script>
+</body>
+</html>
