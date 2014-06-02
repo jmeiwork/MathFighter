@@ -16,5 +16,25 @@ namespace MathManager
         public List<string> Operators { get; set; }
         public decimal Answer { get; set; }
 
+        public string QuestionId { get; set; }
+        public string QuestionCode { get; set; }
+        public string EquationString
+        {
+            get
+            {
+                var builder = new StringBuilder();
+                int operatorIndex = 0;
+
+                foreach(var number in Numbers)
+                {
+                    builder.Append(number);
+                    if( Operators.Count > operatorIndex )
+                    {
+                        builder.Append(Operators[operatorIndex++]);
+                    }
+                }
+                return builder.ToString();
+            }
+        }
     }
 }

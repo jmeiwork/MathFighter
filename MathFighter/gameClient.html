@@ -2,19 +2,51 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
+    <style>
+        #matchAreaContainer{
+            padding: 5px;
+            margin: 0;
+            /*border: dashed 1px #bbbbbb;*/
+        }
+
+        #equation, #wasCorrect, #myAnswer{
+            width: 100px;
+            float: left;
+        }
+
+        #btnStart{
+            margin: 5px;
+        }
+
+        #announcements{
+            clear: both;
+        }
+
+    </style>
 </head>
 <body>
-
+    <!--
     <div><span>type your message:</span><span><input type="text" id="txtMessage" /></span></div>
     <div><button id="btnSend">Send</button></div>
     <div id="messages"></div>
+    -->
+    <div><span>type the group you want to join:</span><span><input type="text" id="txtGroup" /></span><button id="btnJoin">Send</button></div>
 
-    <div><span>type the group you want to join:</span><span><input type="text" id="txtGroup" /></span></div>
-    <div><button id="btnJoin">Send</button></div>
-    <button id="btnNextEquation">Next Question</button>
-    <div id="equation"></div>
+    <button id="btnStart">Start</button>
     <div><input type="text" id="txtAnswer" /></div>
-    <input type="hidden" id="hidQuestionId" />
+    <button id="btnNextEquation">Next Question</button>
+
+    <div id="matchAreaContainer">
+        <div id="equation"></div>
+        <div id="myAnswer"></div>
+        <div id="wasCorrect"></div>
+
+        <table id="history"><tr id="tr"></tr></table>
+    </div>
+
+
+
+    <input type="hidden" id="hidQuestionCode" />
 
     <div id="announcements"></div>
     <script src="Scripts/jquery-1.6.4.js"></script>
@@ -23,6 +55,10 @@
     <script>
         $(function () {
             var playHub = $.connection.playHub;
+            var questionBeingAnswered = "";
+            $("#txtAnswer").hide();
+            $("#btnNextEquation").hide();
+
 
             playHub.client.newJoinAnnouncement = function (message) {
                 $("#announcements").append("<div>" + message + "</div>");
@@ -33,9 +69,29 @@
             }
 
             //----------------------
-            playHub.client.newQuestion = function (data) {
-                $("#hidQuestionId").val() = data.questionId;
-                $("#equation").text(data.equation);
+            playHub.client.newQuestionWithCorrectness = function (connectionId, data, previousWasCorrect) {
+                $("#hidQuestionCode").val(data.QuestionCode);
+                //$("#equation").prepend("<div>" + data.EquationString + "</div>");
+
+                if (previousWasCorrect) {
+                    //$("#wasCorrect").prepend("<div>Correct!</div>");
+                    $("#" + questionBeingAnswered).append("<td>Correct!</td>");
+                }
+                else {
+                    //$("#wasCorrect").prepend("<div>WRONG!</div>");
+                    $("#"+questionBeingAnswered).append("<td>WRONG!!</td>");
+                }
+
+                $("#history").prepend("<tr id='" + data.QuestionId + "'><td>" + data.EquationString + "</td></tr>");
+                questionBeingAnswered = data.QuestionId;
+
+            }
+
+            playHub.client.newQuestion = function (connectionId, data) {
+                $("#hidQuestionCode").val(data.QuestionCode);
+                //$("#equation").prepend("<div>" + data.EquationString + "</div>");
+                $("#history").prepend("<tr id='"+data.QuestionId+"'><td>"+data.EquationString+"</td></tr>");
+                questionBeingAnswered = data.QuestionId;
             }
 
 
@@ -54,12 +110,31 @@
                 });
 
                 //---------------
-                $("#btnNextQuestion").click(function () {
+                $("#btnNextEquation").click(function () {
                     var answer = $("#txtAnswer").val();
-                    var questionId = $("#hidQuestionId").val();
-                    playHub.server.submitAnswer(questionId, answer);
+                    var questionCode = $("#hidQuestionCode").val();
+                    //$("#myAnswer").prepend("<div>" + answer + "</div>");
+                    $("#" + questionBeingAnswered).append("<td>" + answer + "</td>");
+                    playHub.server.submitAnswer($("#txtGroup").val(), questionCode, answer);
                 })
-                
+
+                $("#txtAnswer").keyup(function (e) {
+                    var code = e.which;
+                    if (code == 13) //enter key
+                    {
+                        $("#btnNextEquation").click();
+                        $("#txtAnswer").val("");
+                    }
+                });
+
+                $("#btnStart").click(function () {
+                    $("#btnStart").hide();
+                    $("#txtAnswer").show();
+                    $("#txtAnswer").focus();
+                    $("#btnNextEquation").show();
+
+                    playHub.server.start($("#txtGroup").val());
+                });
 
             });
 
@@ -67,4 +142,6 @@
 
     </script>
 </body>
+
+
 </html>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MathManager
 {
@@ -24,6 +25,20 @@ namespace MathManager
             returnEquation.Answer = number1 + number2;
 
             return returnEquation;
+        }
+
+        public bool Verify(string questionCode, string answer)
+        {
+            bool result = false;
+            answer = answer.Trim();
+
+            if( Regex.IsMatch(answer, "^[0-9]+$") )
+            {
+                var actualAnswer = questionCode.Split(new string[] { "~" }, StringSplitOptions.None)[1];
+                result = actualAnswer == answer;
+            }
+
+            return result;
         }
     }
 }
