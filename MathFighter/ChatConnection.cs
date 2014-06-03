@@ -101,6 +101,11 @@ namespace MathFighter
             {
                 gameConcluded = true;
                 winner = clients.Find(x => x.Points >= goal).ConnectionId;
+
+                foreach (var client in _groupMappings[room])
+                {
+                    client.IsReady = false;
+                }
             }
             else
             {
@@ -112,10 +117,13 @@ namespace MathFighter
 
         public void Reset(string room)
         {
-            foreach(var client in _groupMappings[room])
-            {
-
-            }
+            _groupMappings[room].Find(x => x.ConnectionId == Context.ConnectionId).Points = 0;
+            _groupMappings[room].Find(x => x.ConnectionId == Context.ConnectionId).IsReady = false;
+            //foreach(var client in _groupMappings[room])
+            //{
+            //    client.Points = 0;
+            //}
+            
         }
         public void Ready(string room)
         {
