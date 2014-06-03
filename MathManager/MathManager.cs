@@ -8,14 +8,20 @@ namespace MathManager
 {
     public class MathManager
     {
+        private Random _random;
+
+        public MathManager()
+        {
+            _random = new Random();
+        }
         public Equation GetMathEquation()
         {
             var returnEquation = new Equation();
 
-            var random = new Random();
+            
 
-            var number1 = random.Next(0, 30);
-            var number2 = random.Next(0, 30);
+            var number1 = _random.Next(0, 30);
+            var number2 = _random.Next(0, 30);
 
             returnEquation.Numbers.Add(number1);
             returnEquation.Numbers.Add(number2);

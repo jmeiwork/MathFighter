@@ -11,13 +11,26 @@ namespace MathManager
         {
             Numbers = new List<decimal>();
             Operators = new List<string>();
+            QuestionId = DateTime.Now.Ticks.ToString();
         }
         public List<decimal> Numbers { get; set; }
         public List<string> Operators { get; set; }
         public decimal Answer { get; set; }
 
-        public string QuestionId { get; set; }
-        public string QuestionCode { get; set; }
+        public string QuestionId
+        {
+            get;
+            private set;
+        }
+
+        public string QuestionCode
+        {
+            get
+            {
+                return string.Join(",", Numbers.ToArray()) + string.Join(",", Operators.ToArray()) + "~" + Answer;
+            }
+            
+        }
         public string EquationString
         {
             get
