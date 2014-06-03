@@ -11,5 +11,6 @@ namespace MathFighter
         public bool Name { get; set; }
         public string ConnectionId { get; set; }
 
+        public int Points { get; set; }
     }
 }

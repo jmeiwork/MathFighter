@@ -11,7 +11,7 @@ namespace MathManager
         {
             Numbers = new List<decimal>();
             Operators = new List<string>();
-            QuestionId = DateTime.Now.Ticks.ToString();
+            QuestionId = Guid.NewGuid().ToString();
         }
         public List<decimal> Numbers { get; set; }
         public List<string> Operators { get; set; }

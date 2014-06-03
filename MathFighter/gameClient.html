@@ -25,13 +25,19 @@
             color: #000000;
         }
 
-        .history{
+        .historyContainer{
             width: 200px;
             float: left;
             border: dashed 1px #aaaaaa;
             padding: 3px;
             margin-right: 10px;
             color: #bbb;
+        }
+
+        .history {
+            width: 200px;
+            border: dashed 1px #aaaaaa;
+
         }
 
         #opponentsContainer, #myAnswersContainer table {
@@ -47,15 +53,21 @@
             clear: both;
         }
 
-        #overlay{
-            position: absolute;
-            width: 500px;
-            height: 300px;
-            background-color: rgba(200,200,200,0.5);
-            top: 142px;
-            z-index: 9999;
+        .winner {
+            color: hotpink;
+            font-size: 150%;
         }
 
+        .score {
+            position:relative;
+            left: 150px;
+            clear:both;
+        }
+
+        #myAnswersContainer .score {
+            color: #000000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -72,9 +84,13 @@
     <button id="btnReady">Ready</button>
     <div><input type="text" id="txtAnswer" placeholder="Type your answer here" /><button id="btnNextEquation">Next Question</button></div>
 
+    <button id="btnReset">Reset</button>
     <div id="matchAreaContainer">
         <div id="myAnswersContainer">
-            <table id="myConnectionId" class="history currentPlayer"></table>
+            <div id="myConnectionId" class="historyContainer">
+                <div class="score">--</div>
+                <table class="history currentPlayer"></table>
+            </div>
         </div>
         <div id="opponentsContainer">Your Opponents:<br /></div>
     </div>
@@ -84,7 +100,6 @@
 
     <div id="announcements"></div>
     <div id="messages"></div>
-    <div id="overlay"></div>
     
     <script src="Scripts/jquery-1.6.4.js"></script>
     <script src="Scripts/jquery.signalR-2.0.3.js"></script>
@@ -95,28 +110,31 @@
             var questionBeingAnswered = "";
             $("#txtAnswer").hide();
             $("#btnNextEquation").hide();
-            $("#matchAreaContainer table.currentPlayer").hide();
+            $("#matchAreaContainer").hide();
             $("#opponentsContainer").hide();
             $("#btnReady").hide();
-            $("#overlay").hide();
+            $("#btnReset").hide();
 
+    
             //=====================================  Callbacks  =============================================
 
             playHub.client.newJoinAnnouncement = function (message) {
-                $("#announcements").append("<div>" + message + "</div>");
+                //$("#announcements").append("<div>" + message + "</div>");
             }
 
             playHub.client.newMessage = function (data) {
                 $("#messages").append("<div>" + data + "</div>");
             }
 
-            playHub.client.setResult = function (connectionId, questionId, isCorrect) {
+            playHub.client.setResult = function (connectionId, questionId, isCorrect, points) {
                 if (isCorrect) {
                     $("#" + questionId + " .result").append("Correct!");
                 }
                 else {
                     $("#" + questionId + " .result").append("WRONG!!");
                 }
+                //Update the total score
+                $("#" + connectionId + " .score").text(points);
             }
 
             playHub.client.setAnswer = function (connectionId, questionId, answer) {
@@ -129,6 +147,16 @@
                 }
             }
 
+
+            playHub.client.setWinner = function (winnerConnectionId) {
+                $("#" + winnerConnectionId + " .history").prepend("<tr><td colspan='3' class='winner'>WINNER</td></tr>");
+                $("#txtAnswer").hide();
+                $("#btnNextEquation").hide();
+                $("#btnReset").show();
+
+            }
+
+
             playHub.client.newQuestion = function (connectionId, data) {
 
                 if (connectionId == playHub.connection.id) {
@@ -136,17 +164,15 @@
                     $("#hidQuestionId").val(data.QuestionId);
                 }
                 else {
-                    if ($("#" + connectionId + ".history").length == 0) {
-                        setupOpponent(connectionId);
-                    }
+                    setupOpponent(connectionId);
                 }
-                $("#" + connectionId + ".history").prepend("<tr id='" + data.QuestionId + "'><td class='equation'>" + data.EquationString + "=</td><td class='answer'></td><td class='result'></td></tr>");
+                $("#" + connectionId + " .history").prepend("<tr id='" + data.QuestionId + "'><td class='equation'>" + data.EquationString + "=</td><td class='answer'></td><td class='result'></td></tr>");
 
             }
 
             var setupOpponent = function (connectionId) {
-                if (connectionId != playHub.connection.id) {
-                    $("#matchAreaContainer").append("<table id='" + connectionId + "' class='history'></table>");
+                if (connectionId != playHub.connection.id && $("#" + connectionId + " .history").length == 0) {
+                    $("#matchAreaContainer").append("<div id='" + connectionId + "' class='historyContainer'><div class='score'>--</div><table class='history'></table></div>");
                 }
             };
 
@@ -155,13 +181,21 @@
             //=======================================  Events Handlers  =========================================================
 
             $.connection.hub.start().done(function () {
-                $("#myConnectionId").attr("id", playHub.connection.id);
+                $("#myConnectionId").attr({ id: playHub.connection.id });
+
 
                 $("#btnSend").click(function () {
                     var data = $("#txtMessage").val();
                     playHub.server.sendMessageForRoom(
                         $("#txtGroup").val(), data
                     );
+                });
+
+                $("#btnReset").click(function () {
+                    $("#txtAnswer").val("");
+                    $(".score").text("--");
+                    $(".history").empty();
+                    playHub.server.reset($("#txtGroup").val());
                 });
 
                 $("#btnJoin").click(function () {
@@ -187,14 +221,12 @@
                 });
 
                 $("#btnReady").click(function () {
-                    $("#overlay").show();
                     $("#btnReady").hide();
                     $("#txtAnswer").show();
                     $("#txtAnswer").focus();
                     $("#btnNextEquation").show();
-                    $("#matchAreaContainer table.currentPlayer").show();
+                    $("#matchAreaContainer").show();
                     $("#opponentsContainer").show();
-
 
                     playHub.server.ready($("#txtGroup").val());
                 });

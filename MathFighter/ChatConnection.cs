@@ -7,6 +7,7 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.AspNet.SignalR.Hubs;
 using MathManager;
+using System.Configuration;
 
 namespace MathFighter
 {
@@ -66,15 +67,56 @@ namespace MathFighter
         {
             var mathManger = new MathManager.MathManager();
             var isCorrect = mathManger.Verify(questionCode, answer);
-            //mathManger.PersistResult(Context.ConnectionId, isCorrect, questionId, answer);
+            if( isCorrect )
+            {
+                _groupMappings[room].Find(x => x.ConnectionId == Context.ConnectionId).Points += int.Parse(answer);
+            }
+            
             var nextEquation = mathManger.GetMathEquation();
-
+            var points = _groupMappings[room].Find(x => x.ConnectionId == Context.ConnectionId).Points;
             Clients.Group(room).setAnswer(Context.ConnectionId, questionId, answer);
-            Clients.Group(room).setResult(Context.ConnectionId, questionId, isCorrect);
-            Clients.Group(room).newQuestion(Context.ConnectionId, nextEquation);
+            Clients.Group(room).setResult(Context.ConnectionId, questionId, isCorrect, points);
 
+            string winner;
+            //Detect game conclusion
+            if( GameConcluded(room, out winner) )
+            {
+                Clients.Group(room).setWinner(winner);
+            }
+            else
+            {
+                Clients.Group(room).newQuestion(Context.ConnectionId, nextEquation);
+            }
         }
 
+        private bool GameConcluded(string room, out string winner)
+        {
+            bool gameConcluded = false;
+            //check if someone has exceeded the total goal
+            int goal = int.Parse(ConfigurationManager.AppSettings.Get("goal"));
+
+            var clients = _groupMappings[room];
+
+            if(clients.Exists(x => x.Points >= goal))
+            {
+                gameConcluded = true;
+                winner = clients.Find(x => x.Points >= goal).ConnectionId;
+            }
+            else
+            {
+                winner = "";
+            }
+
+            return gameConcluded;
+        }
+
+        public void Reset(string room)
+        {
+            foreach(var client in _groupMappings[room])
+            {
+
+            }
+        }
         public void Ready(string room)
         {
             if( string.IsNullOrEmpty(room) )
