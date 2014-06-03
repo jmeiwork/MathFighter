@@ -27,6 +27,7 @@ namespace MathManager
         {
             get
             {
+                //I'm sending the answer to the client. I know it's bad...
                 return string.Join(",", Numbers.ToArray()) + string.Join(",", Operators.ToArray()) + "~" + Answer;
             }
             
